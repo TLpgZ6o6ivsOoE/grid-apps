@@ -412,15 +412,15 @@ function renderFeaturesSection() {
             }
         };
         const onUp = async upEvent => {
-            window.removeEventListener('mousemove', onMove);
-            window.removeEventListener('mouseup', onUp);
+            window.removeEventListener('pointermove', onMove);
+            window.removeEventListener('pointerup', onUp);
             const finalCount = timelineCountFromPointer(upEvent);
             this.timelinePointerDrag = false;
             this.timelineDragTargetCount = null;
             await setTimeline(finalCount);
         };
-        window.addEventListener('mousemove', onMove);
-        window.addEventListener('mouseup', onUp);
+        window.addEventListener('pointermove', onMove);
+        window.addEventListener('pointerup', onUp);
     };
     const dropMove = (targetFeature, before = true) => {
         const dragId = this.dragFeatureId || null;

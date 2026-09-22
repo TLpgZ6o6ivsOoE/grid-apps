@@ -119,8 +119,9 @@ function createTimelineMarkerRow({ active = false, onSelect, onPointerStart }) {
     const row = document.createElement('div');
     row.className = `tree-timeline-marker ${active ? 'active' : ''}`;
     row.onclick = () => onSelect?.();
-    row.onmousedown = event => {
-        if (event.button !== 0) return;
+    // pointerdown so the marker drags with touch as well as with a mouse
+    row.onpointerdown = event => {
+        if (event.button > 0) return;
         onSelect?.();
         onPointerStart?.(event);
         event.preventDefault();

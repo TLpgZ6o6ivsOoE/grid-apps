@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Grid.Space — HarmonyOS</title>
+    <link rel="icon" href="/icon/kirimoto.png">
+    <style>
+        :root { color-scheme: dark; }
+        * { box-sizing: border-box; }
+        body {
+            margin: 0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 40px;
+            background: #1b1d21;
+            color: #e8e8ea;
+            font-family: "HarmonyOS Sans", "Segoe UI", system-ui, sans-serif;
+        }
+        h1 { margin: 0; font-size: 34px; font-weight: 600; letter-spacing: .5px; }
+        .sub { margin-top: -28px; opacity: .55; font-size: 14px; }
+        .apps { display: flex; gap: 22px; flex-wrap: wrap; justify-content: center; }
+        a.app {
+            width: 210px;
+            padding: 26px 20px;
+            border: 1px solid #33363d;
+            border-radius: 14px;
+            background: #24272c;
+            color: inherit;
+            text-decoration: none;
+            text-align: center;
+            transition: border-color .15s, transform .15s, background .15s;
+        }
+        a.app:hover { border-color: #4c8bf5; background: #2a2e34; transform: translateY(-2px); }
+        a.app b { display: block; font-size: 19px; margin-bottom: 8px; }
+        a.app span { font-size: 13px; opacity: .6; line-height: 1.45; display: block; }
+        footer { font-size: 12px; opacity: .4; }
+    </style>
+</head>
+
+<body>
+    <h1>Grid.Space</h1>
+    <div class="sub">running locally — no network required</div>
+
+    <div class="apps">
+        <a class="app" href="/kiri/index.html">
+            <b>Kiri:Moto</b>
+            <span>3D printing &middot; CAM &middot; laser<br>slicing and toolpaths</span>
+        </a>
+        <a class="app" href="/mesh/index.html">
+            <b>Mesh:Tool</b>
+            <span>repair, scale and boolean<br>operations on meshes</span>
+        </a>
+        <a class="app" href="/void/index.html">
+            <b>Void:Build</b>
+            <span>parametric solids<br>solver workspace</span>
+        </a>
+    </div>
+
+    <footer id="ver"></footer>
+
+    <script type="module">
+        // The browser build shows this choice through the service worker install
+        // page. The packaged app serves the bundle directly, so app selection is
+        // a plain page with plain links.
+        import { version } from '/lib/moto/license.js';
+        document.getElementById('ver').textContent = `version ${version}`;
+    </script>
+</body>
+
+</html>

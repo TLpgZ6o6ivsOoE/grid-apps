@@ -1457,7 +1457,7 @@ function updateConstraintGlyphs(getApi, opts = {}) {
                         const api = getApi();
                         api.interact?.setHoveredSketchConstraint?.(null);
                     };
-                    glyph.onmousedown = event => {
+                    glyph.onpointerdown = event => {
                         event.preventDefault();
                         event.stopPropagation();
                         const api = getApi();
@@ -1566,7 +1566,7 @@ function updateConstraintGlyphs(getApi, opts = {}) {
                 const api = getApi();
                 api.interact?.setHoveredSketchConstraint?.(null);
             };
-            glyph.onmousedown = event => {
+            glyph.onpointerdown = event => {
                 event.preventDefault();
                 event.stopPropagation();
                 const api = getApi();

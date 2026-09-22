@@ -2545,3 +2545,42 @@ details[open] summary::after {
 .em20 {
     max-width: 20em;
 }
+
+/* Touch input support (HarmonyOS PC / tablet / phone) --------------------
+   Drag targets are driven by Pointer Events now, so the browser must not
+   steal the gesture for panning/zooming mid-drag: without touch-action:none
+   the first downward move scrolls the page and the pointer stream is
+   cancelled. Handles also get a larger transparent hit area so a finger can
+   grab them (mouse users are unaffected -- the visual size is unchanged). */
+#slider,
+#slider-mid,
+#slider-lo,
+#slider-hi,
+#tracker,
+.selection-panel-head {
+    touch-action: none;
+}
+#slider-lo,
+#slider-hi {
+    position: relative;
+}
+#slider-lo::after,
+#slider-hi::after {
+    content: '';
+    position: absolute;
+    top: -8px;
+    bottom: -8px;
+    left: -6px;
+    right: -6px;
+}
+#slider.slider-mobile,
+#slider.slider-mobile #slider-lo,
+#slider.slider-mobile #slider-hi {
+    min-height: 40px;
+}
+/* touch devices have no hover: keep the value labels pinned while dragging
+   instead of relying on :hover to reveal them */
+.touch #slider-lo-val,
+.touch #slider-hi-val {
+    display: block;
+}

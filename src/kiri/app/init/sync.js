@@ -299,9 +299,11 @@ function setup_keybd_nav() {
         const handle = $(handleId);
         if (!panel || !handle) return;
         let sx = 0, sy = 0, px = 0, py = 0, dragging = false;
-        handle.onmousedown = (ev) => {
-            if (ev.button !== 0) return;
+        let pointerId;
+        handle.onpointerdown = (ev) => {
+            if (ev.button > 0) return;
             dragging = true;
+            pointerId = ev.pointerId;
             sx = ev.clientX;
             sy = ev.clientY;
             const rect = panel.getBoundingClientRect();
@@ -309,8 +311,9 @@ function setup_keybd_nav() {
             py = rect.top;
             ev.preventDefault();
             ev.stopPropagation();
+            handle.setPointerCapture?.(ev.pointerId);
         };
-        document.addEventListener('mousemove', (ev) => {
+        handle.onpointermove = (ev) => {
             if (!dragging) return;
             const nx = px + (ev.clientX - sx);
             const ny = py + (ev.clientY - sy);
@@ -318,8 +321,8 @@ function setup_keybd_nav() {
             panel.style.top = `${Math.round(ny)}px`;
             panel.style.right = 'auto';
             panel.style.bottom = 'auto';
-        });
-        document.addEventListener('mouseup', () => {
+        };
+        const endDrag = () => {
             if (dragging && storageKey) {
                 const rect = panel.getBoundingClientRect();
                 api.local.set(storageKey, JSON.stringify({
@@ -327,8 +330,14 @@ function setup_keybd_nav() {
                     top: Math.round(rect.top)
                 }));
             }
+            if (pointerId !== undefined) {
+                handle.releasePointerCapture?.(pointerId);
+                pointerId = undefined;
+            }
             dragging = false;
-        });
+        };
+        handle.onpointerup = endDrag;
+        handle.onpointercancel = endDrag;
     }
 
     // bind interface action elements
@@ -351,6 +360,11 @@ function setup_keybd_nav() {
     $('set-profs').onclick = (ev) => { ev.stopPropagation(); api.conf.show() };
     $('set-tools').onclick = (ev) => { ev.stopPropagation(); api.show.tools() };
     $('set-prefs').onclick = (ev) => { ev.stopPropagation(); api.modal.show('prefs') };
+    // Only built inside the native shell (see menu.js), hence the guard.
+    const appSwitch = $('app-switch');
+    if (appSwitch) {
+        appSwitch.onclick = (ev) => { ev.stopPropagation(); location.href = '/harmony/index.html' };
+    }
     $('file-new').onclick = (ev) => { ev.stopPropagation(); settingsOps.new_workspace() };
     $('file-recent').onclick = () => { api.modal.show('files') };
     $('file-import').onclick = (ev) => { api.event.import(ev); };
@@ -411,6 +425,11 @@ function setup_keybd_nav() {
     $('context-mirror').onclick = selection.mirror;
     $('context-rotate-panel').onclick = () => toggleSelectionPanel('panel-rotate');
     $('context-scale-panel').onclick = () => toggleSelectionPanel('panel-scale');
+    // the close buttons live inside the draggable head, so they must swallow
+    // pointerdown too -- otherwise the head's handler captures the pointer and
+    // starts a drag instead of letting the click land on the button
+    $('panel-rotate-close').onpointerdown = (ev) => { ev.stopPropagation(); };
+    $('panel-scale-close').onpointerdown = (ev) => { ev.stopPropagation(); };
     $('panel-rotate-close').onmousedown = (ev) => { ev.stopPropagation(); };
     $('panel-scale-close').onmousedown = (ev) => { ev.stopPropagation(); };
     $('panel-rotate-close').onclick = (ev) => { ev.stopPropagation(); hideSelectionPanel('panel-rotate'); };

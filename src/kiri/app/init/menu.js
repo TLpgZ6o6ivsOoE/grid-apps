@@ -204,6 +204,19 @@ function content(actions) {
                     menuItem(actions, { id: 'set-tools', lk: 'tools', text: 'tools', iconClass: 'fas fa-tools' }),
                     menuItem(actions, { id: 'set-prefs', lk: 'prefs', text: 'prefs', iconClass: 'fa-solid fa-square-check' }),
                     hr({ class: "el-app-hide" }),
+                    // In the native shell the install entries below are inert: there
+                    // is no service worker to install into, so adapter.js hides them.
+                    // The app picker is offered instead, because the shell boots
+                    // straight into Kiri:Moto and /harmony/index.html is the only
+                    // route from there to Mesh:Tool / Void:Build.
+                    ...(globalThis.harmony?.isHarmony
+                        ? [menuItem(actions, {
+                            id: 'app-switch',
+                            text: 'apps',
+                            title: 'Mesh:Tool / Void:Build',
+                            iconClass: 'fas fa-table-cells-large'
+                        })]
+                        : []),
                     menuItem(actions, { id: 'install', lk: 'install', text: 'install' }),
                     menuItem(actions, { id: 'uninstall', lk: 'uninstall', text: 'uninstall', className: 'hide' })
                 ]

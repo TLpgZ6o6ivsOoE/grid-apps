@@ -16,6 +16,7 @@ class SliderControl {
     #sliderBar;
     #sliderBar2;
     #drag = {};
+    #pointerId;
 
     // Callbacks to replace event emissions
     #onLayerChange;
@@ -191,39 +192,50 @@ class SliderControl {
     #bindDrag(el, deltaHandler) {
         const slider = this.#slider.range;
 
-        el.ontouchstart = el.onmousedown = (ev) => {
-            this.#tracker.style.display = 'block';
+        // Pointer Events unify mouse, touch and pen. The old mouse/touch split
+        // could not work on a touchscreen: a tap produces a synthesized
+        // mousedown immediately followed by mouseup (no intermediate moves), so
+        // the drag never accumulated a delta. Pointer capture also keeps the
+        // move stream alive when the finger drifts off the thin grab handle.
+        el.onpointerdown = (ev) => {
+            if (ev.button > 0) return;
             ev.stopPropagation();
+            ev.preventDefault();
+            this.showLabels();
+            this.#tracker.style.display = 'block';
 
-            let obj = (ev.touches ? ev.touches[0] : ev);
             this.#drag.width = slider.clientWidth;
             this.#drag.maxval = this.#drag.width - this.#sliderBar2;
-            this.#drag.start = obj.screenX;
+            this.#drag.start = ev.clientX;
             this.#drag.loat = this.#drag.low = this.#pxToInt(this.#slider.hold.style.marginLeft);
             this.#drag.mdat = this.#drag.mid = this.#slider.mid.clientWidth;
             this.#drag.hiat = this.#pxToInt(this.#slider.hold.style.marginRight);
             this.#drag.mdmax = this.#drag.width - this.#sliderBar - this.#drag.loat;
             this.#drag.himax = this.#drag.width - this.#sliderBar - this.#drag.mdat;
 
-            const cancelDrag = this.#tracker.ontouchend = this.#tracker.onmouseup = (ev) => {
+            this.#pointerId = ev.pointerId;
+            el.setPointerCapture?.(ev.pointerId);
+
+            const cancelDrag = (ev) => {
                 if (ev) {
                     ev.stopPropagation();
                     ev.preventDefault();
                 }
-                slider.onmousemove = undefined;
+                if (this.#pointerId !== undefined) {
+                    el.releasePointerCapture?.(this.#pointerId);
+                    this.#pointerId = undefined;
+                }
+                el.onpointermove = el.onpointerup = el.onpointercancel = undefined;
                 this.#tracker.style.display = 'none';
             };
 
-            el.ontouchend = cancelDrag;
-            el.ontouchmove = this.#tracker.ontouchmove = this.#tracker.onmousemove = (ev) => {
+            el.onpointerup = cancelDrag;
+            el.onpointercancel = cancelDrag;
+            el.onpointermove = (ev) => {
                 ev.stopPropagation();
                 ev.preventDefault();
-                if (ev.buttons === 0) {
-                    return cancelDrag();
-                }
                 if (deltaHandler) {
-                    let obj = (ev.touches ? ev.touches[0] : ev);
-                    deltaHandler(obj.screenX - this.#drag.start);
+                    deltaHandler(ev.clientX - this.#drag.start);
                 }
             };
         };

@@ -63,12 +63,17 @@ function createSketchRuntimeApi(getApi) {
                 this.updatePointScreenScales();
                 this.updateConstraintGlyphs();
             });
-            window.addEventListener('mousemove', event => {
+            window.addEventListener('pointermove', event => {
                 if (this._glyphDrag) {
                     this.updateConstraintDrag(event, false);
                 }
             });
-            window.addEventListener('mouseup', event => {
+            window.addEventListener('pointerup', event => {
+                if (this._glyphDrag) {
+                    this.updateConstraintDrag(event, true);
+                }
+            });
+            window.addEventListener('pointercancel', event => {
                 if (this._glyphDrag) {
                     this.updateConstraintDrag(event, true);
                 }

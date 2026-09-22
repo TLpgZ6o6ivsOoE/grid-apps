@@ -78,6 +78,13 @@ function isSecure(proto) {
  * @param {string} filename - Filename for download
  */
 function download(data, filename) {
+    // HarmonyOS: ArkWeb does not honour blob: + <a download> when the page is
+    // driven from inside an app Web component, so the bytes are streamed to the
+    // native shell which writes them to a location the user picks.
+    if (self.harmony && self.harmony.native) {
+        self.harmony.save(data, filename);
+        return;
+    }
     let url = window.URL.createObjectURL(new Blob([data], {type: "octet/stream"}));
     $('mod-any').innerHTML = `<a id="_dexport_" href="${url}" download="${filename}">x</a>`;
     $('_dexport_').click();
@@ -110,6 +117,12 @@ export const api = {
     catalog: FILES,
     client: workers,
     clip(text) {
+        // HarmonyOS: navigator.clipboard requires a permission prompt that
+        // ArkWeb only offers to trusted pages, so use the native pasteboard.
+        if (self.harmony && self.harmony.native) {
+            self.harmony.clip(text);
+            return;
+        }
         navigator.clipboard
             .writeText(text)
             .catch(err => console.error('Clipboard Error:', err));

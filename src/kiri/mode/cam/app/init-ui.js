@@ -448,7 +448,6 @@ export function opRender() {
                 // only trigger on operation buttons bound to recs
                 return;
             }
-            let mobile = ev.touches;
             surfaceDone();
             traceDone();
             let target = ev.target, clist = target.classList;
@@ -492,7 +491,11 @@ export function opRender() {
             ev.preventDefault();
             let tracker = UI.tracker;
             tracker.style.display = 'block';
-            let cancel = tracker.onmouseup = (ev) => {
+            // A touch pointer is implicitly captured by the element it started
+            // on, which would retarget every move away from the tracker; take
+            // the capture explicitly so the tracker sees the whole gesture.
+            tracker.setPointerCapture?.(ev.pointerId);
+            let cancel = tracker.onpointerup = (ev) => {
                 oplist = env.current.process.ops;
                 clist.remove("drag");
                 tracker.style.display = 'none';
@@ -506,9 +509,8 @@ export function opRender() {
                 }
                 api.conf.save();
                 opRender();
-                if (mobile) {
-                    el.ontouchmove = onDown;
-                    el.ontouchend = undefined;
+                if (ev?.pointerId !== undefined && tracker.hasPointerCapture?.(ev.pointerId)) {
+                    tracker.releasePointerCapture?.(ev.pointerId);
                 }
             };
             function onMove(ev) {
@@ -522,7 +524,7 @@ export function opRender() {
                     let rect = el.getBoundingClientRect();
                     let top = rect.top;
                     let bottom = rect.bottom;// + rect.height;
-                    let tar = mobile ? ev.touches[0] : ev;
+                    let tar = ev;
                     if (tar.pageY >= top && tar.pageY <= bottom) {
                         let mid = (top + bottom) / 2;
                         try { listel.removeChild(target); } catch (e) { }
@@ -530,39 +532,37 @@ export function opRender() {
                     }
                 }
             }
-            tracker.onmousemove = onMove;
-            if (mobile) {
-                el.ontouchmove = onMove;
-                el.ontouchend = cancel;
-            }
+            tracker.onpointermove = onMove;
+            tracker.onpointercancel = cancel;
         }
-        if (SPACE.info.mob) {
-            let touched = false;
-            el.ontouchstart = (ev) => {
-                touched = true;
-                if (env.poppedRec === rec && popped) {
-                    onLeave(ev);
-                } else {
-                    onEnter(ev);
-                }
-            };
-            el.ontouchmove = onDown;
-            el.onmouseenter = (ev) => {
-                if (touched) {
-                    // touches block mouse events on touchscreen PCs
-                    // which are often sent along with touch events
-                    // but when not touched, allow the mouse to work
-                    return;
-                }
-                el.onmousedown = onDown;
-                el.onmouseleave = onLeave;
+        // Pointer Events replace the old mouse/touch split: one code path now
+        // serves mouse, finger and pen. `pointerType` keeps the behaviours
+        // apart -- a mouse press starts a reorder straight away, while a touch
+        // press first opens/closes the popup and only a move starts the reorder.
+        el.onpointerdown = (ev) => {
+            if (ev.pointerType === 'mouse') {
+                onDown(ev);
+            } else if (env.poppedRec === rec && popped) {
+                onLeave(ev);
+            } else {
                 onEnter(ev);
-            };
-        } else {
-            el.onmousedown = onDown;
-            el.onmouseenter = onEnter;
-            el.onmouseleave = onLeave;
-        }
+            }
+        };
+        el.onpointermove = (ev) => {
+            if (ev.pointerType !== 'mouse') {
+                onDown(ev);
+            }
+        };
+        el.onpointerenter = (ev) => {
+            if (ev.pointerType === 'mouse') {
+                onEnter(ev);
+            }
+        };
+        el.onpointerleave = (ev) => {
+            if (ev.pointerType === 'mouse') {
+                onLeave(ev);
+            }
+        };
     }
     if (env.lastMode !== VIEWS.ANIMATE) {
         // update widget rotations from timeline marker

@@ -29,6 +29,12 @@ let spin_timer;
 
 // add download / blob export to util
 util.download = (data, filename = "mesh-data") => {
+    // HarmonyOS: blob: + <a download> is not honoured inside the app Web
+    // component, so stream the bytes to the native shell instead.
+    if (self.harmony && self.harmony.native) {
+        self.harmony.save(data, filename);
+        return;
+    }
     let url = window.URL.createObjectURL(new Blob([data], {type: "octet/stream"}));
     $('download').innerHTML = `<a id="_data_export_" href="${url}" download="${filename}">x</a>`;
     $('_data_export_').click();

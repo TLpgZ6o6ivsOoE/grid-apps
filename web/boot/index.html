@@ -33,9 +33,20 @@
             width: 0%;
         }
     </style>
+    <script src="/harmony/adapter.js"></script>
     <script type="module">
         import { version } from '/lib/moto/license.js';
         (async () => {
+            // HarmonyOS: the shell serves the bundle from a local origin, so the
+            // app is already "installed" and there is no service worker to
+            // install one into. The packaged shell is a single-app product, so
+            // boot goes straight into Kiri:Moto and the picker page at
+            // /harmony/index.html is never on the launch path (it stays
+            // reachable by URL for Mesh:Tool / Void:Build).
+            if (globalThis.harmony && globalThis.harmony.isHarmony) {
+                location.replace('/kiri/index.html');
+                return;
+            }
             const reg = await navigator.serviceWorker.register('/boot/service.js', { scope: '/' });
             await reg.update();
             await navigator.serviceWorker.ready;

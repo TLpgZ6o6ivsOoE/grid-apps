@@ -889,6 +889,12 @@ const toolbar = {
     },
 
     downloadExport(data, filename, mime = 'application/octet-stream') {
+        // HarmonyOS: blob: + <a download> is not honoured inside the app Web
+        // component, so stream the bytes to the native shell instead.
+        if (self.harmony && self.harmony.native) {
+            self.harmony.save(data, filename);
+            return;
+        }
         const blob = data instanceof Blob ? data : new Blob([data], { type: mime });
         const url = URL.createObjectURL(blob);
         const a = document.createElement('a');

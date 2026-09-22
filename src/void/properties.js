@@ -201,29 +201,35 @@ const properties = {
 
     bindDrag() {
         if (!this.header || !this.panel) return;
-        this.header.addEventListener('mousedown', event => {
-            if (event.button !== 0) return;
+        // Pointer Events so the header drags with a finger as well as a mouse;
+        // capture keeps the stream alive when the pointer leaves the header.
+        this.header.addEventListener('pointerdown', event => {
+            if (event.button > 0) return;
             const rect = this.panel.getBoundingClientRect();
             this._drag = {
                 dx: event.clientX - rect.left,
-                dy: event.clientY - rect.top
+                dy: event.clientY - rect.top,
+                id: event.pointerId
             };
             event.preventDefault();
+            this.header.setPointerCapture?.(event.pointerId);
         });
 
-        window.addEventListener('mousemove', event => {
+        this.header.addEventListener('pointermove', event => {
             if (!this._drag || !this.panel) return;
             const x = event.clientX - this._drag.dx;
             const y = event.clientY - this._drag.dy;
             this.setPanelPosition(x, y);
         });
 
-        window.addEventListener('mouseup', () => {
+        const endDrag = () => {
             if (this._drag) {
                 this.persistPosition();
             }
             this._drag = null;
-        });
+        };
+        this.header.addEventListener('pointerup', endDrag);
+        this.header.addEventListener('pointercancel', endDrag);
 
         window.addEventListener('resize', () => {
             if (!this.panel || this.panel.classList.contains('hidden') || !this._savedPos) return;
